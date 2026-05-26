@@ -23,46 +23,48 @@ fetchBtn.addEventListener("click", async () => {
     userCard.innerHTML = "";
     errorText.innerHTML = "";
     loadingText.innerHTML = "Loading..";
-    
+
     showSkeletons();
 
     try {
         const response = await fetch(API_URL);
 
-        if (!response.ok) throw new Error('Something went wrong');
+        if (!response.ok) throw new Error("Unexpected Error!");
 
         const data = await response.json();
 
-        const user = data.results[0];
+        const users = data.results;
 
-        display(user);
+        display(users);
 
     } catch (error) {
         errorText.textContent = error.message;
     } finally {
         loadingText.textContent = "";
     }
-})
+});
 
-function display(user) {
-    userCard.innerHTML = `
-    <div class="card">
-      <img src="${user.picture.large}" alt="User Image">
+function display(users) {
+    userCard.innerHTML = users.map(user => {
+        return `
+            <div class="card">
+                <img src="${user.picture.large}" alt="User Image">
 
-      <h2>
-        ${user.name.first} ${user.name.last}
-      </h2>
+                <h2>
+                    ${user.name.first} ${user.name.last}
+                </h2>
 
-      <p>
-        ${user.email}
-      </p>
+                <p>
+                    ${user.email}
+                </p>
 
-      <p>
-        ${user.location.country}
-      </p>
-    </div>
-    `;
-} 
+                <p>
+                    ${user.location.country}
+                </p>
+            </div>
+        `;
+    }).join();
+}
 
 
 const themeToggle = document.getElementById("theme-toggle");
