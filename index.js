@@ -3,7 +3,7 @@ const userCard = document.getElementById("user-card");
 const loadingText = document.getElementById("loading");
 const errorText = document.getElementById("error");
 
-const API_URL = "https://randomuser.me/api/?results=5";
+const API_URL = "https://randomuser.me/api/?results=6";
 
 function showSkeletons() {
     userCard.innerHTML = "";
@@ -63,7 +63,7 @@ function display(users) {
                 </p>
             </div>
         `;
-    }).join();
+    }).join("");
 }
 
 
