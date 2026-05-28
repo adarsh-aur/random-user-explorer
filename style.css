@@ -38,10 +38,29 @@ button {
   transition: 0.25s ease;
 }
 
+.input-text {
+  display: block;
+  margin: 15px auto;
+  padding: 10px 14px;
+  width: 250px;
+  border-radius: 10px;
+  border: 1px solid #dbd9c4;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.input-text:hover {
+  box-shadow: 0 10px 10px rgba(0,0,0,0.12);
+}
+
 #fetch-btn {
   background: green;
   color: white;
 }
+
+#fetch-btn:after {
+  cursor: not-allowed;
+} 
 
 #fetch-btn:hover {
   background: #25c55d;
@@ -199,3 +218,28 @@ body.dark .skeleton::after {
     width: 100%;
   }
 }
+
+#retry-btn {
+  background: rgb(116, 49, 197);
+  color: white;
+}
+
+#retry-btn:hover {
+  background: #3c1b8e;
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+#fav {
+  background: rgb(231, 91, 91);
+  color: white;
+}
+
+#fav:hover {
+  background: #861010;
+  transform: translateY(-2px);
+}
+
