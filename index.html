@@ -4,35 +4,66 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Random User Explorer</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <link rel="stylesheet" href="style.css"/>
 </head>
+
 <body>
 
   <div class="container">
-    <h1>Random User Explorer</h1>
 
-    <button id="theme-toggle">
-      Toggle Dark Mode
-    </button>
+    <h1>🌍 Random User Explorer</h1>
 
-    <button id="fetch-btn">
-      Fetch User
-    </button>
+    <div class="top-controls">
 
-    <button id="retry-btn">
-      Retry
-    </button>
+      <button id="theme-toggle">
+        🌙 Toggle Theme
+      </button>
 
-    <button id="fav" onclick="showFavourites()">Show Favourites</button>
+      <button id="fetch-btn">
+        Fetch Users
+      </button>
 
-    <input class="input-text" type="text" placeholder="Search User">
+      <button id="retry-btn">
+        Retry
+      </button>
+
+      <button id="fav-btn">
+        ❤️ Show Favourites
+      </button>
+
+    </div>
+
+    <div class="status-bar">
+
+      <span id="scroll-status" class="scroll-on">
+        ♾️ Infinite Scroll: ON
+      </span>
+    
+    </div>
+
+    <input
+      class="input-text"
+      type="text"
+      placeholder="Search users..."
+    />
 
     <p id="loading"></p>
     <p id="error"></p>
 
     <div id="user-card"></div>
+
+    <div class="footer-controls">
+
+      <button id="load-more-btn">
+        Load More
+      </button>
+
+    </div>
+
   </div>
 
   <script src="index.js"></script>
+
 </body>
 </html>

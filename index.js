@@ -1,178 +1,228 @@
 const fetchBtn = document.getElementById("fetch-btn");
+const retryBtn = document.getElementById("retry-btn");
+const favBtn = document.getElementById("fav-btn");
+const themeBtn = document.getElementById("theme-toggle");
+const loadMoreBtn = document.getElementById("load-more-btn");
+
 const userCard = document.getElementById("user-card");
 const loadingText = document.getElementById("loading");
 const errorText = document.getElementById("error");
 const input = document.querySelector(".input-text");
-const retry = document.getElementById("retry-btn");
 
-const API_URL = "https://randomuser.me/api/?results=15";
+const API_URL = "https://randomuser.me/api/";
 
 let allUsers = [];
-
 let fav = JSON.parse(localStorage.getItem('fav')) || [];
-let copiedEmail = JSON.parse(localStorage.getItem('copy')) || [];
+let copiedEmails = JSON.parse(localStorage.getItem('copy')) || [];
 
-function saveCopyEmail() {
-    localStorage.setItem('copy', JSON.stringify(copiedEmail));
+let page = 1;
+let isLoading = false;
+let isInfinite = true;
+let inFavMode = false;
+
+function saveFav() {
+    localStorage.setItem('fav', JSON.stringify(fav));
+}
+
+function saveCopy() {
+    localStorage.setItem('copy', JSON.stringify(copiedEmails));
+}
+
+function loadingSpinner(btn, state) {
+    if (!btn) return;
+
+    if (state) {
+        btn.disabled = true;
+        btn.dataset.original = btn.innerHTML;
+        btn.innerHTML = "⌛ Loading.."
+    }
+    else {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.original || btn.innerHTML;
+    }
 }
 
 async function copyEmail(email) {
     try {
         await navigator.clipboard.writeText(email);
 
-        if(!copiedEmail.includes(email)) {
-            copiedEmail.push(email);
-            saveCopyEmail();
+        if (!copiedEmails.includes(email)) {
+            copiedEmails.push(email);
+            alert("Email copied!");
+            saveCopy();
         }
-        alert("Email Copied");
+
     } catch (error) {
         errorText.innerHTML = error.message;
     }
 }
 
-function saveToStorage() {
-    localStorage.setItem('fav', JSON.stringify(fav));
-}
-
-function addToFavourites(email) {
+function addToFav(email) {
     const user = allUsers.find(u => u.email === email);
 
     if (!user) {
+        errorText.innerHTML = "No user(s) found";
         return;
     }
 
-    const alreadyExists = fav.some(fav => fav.email === email);
-
-    if (!alreadyExists) {
+    if (!fav.some(f => f.email === email)) {
         fav.push(user);
-        saveToStorage();
+        saveFav();
     }
 }
 
- 
+function showFav() {
 
+    inFavMode = !inFavMode;
 
-window.addEventListener("load", () => {
-    fav = JSON.parse(localStorage.getItem("fav")) || [];
-});
+    if (inFavMode) {
 
-function showFavourites() {
-    display(fav);
-}
+        favBtn.innerHTML = "⬅ Back To Users";
 
-function showSkeleton() {
-    userCard.innerHTML = "";
+        if (fav.length === 0) {
 
-    for (let i = 0; i < 6; i++) {
-        userCard.innerHTML += `
-        <div class="skeleton">
-            <div class="circle"></div>
-            <div class="line long"></div>
-            <div class="line short"></div>
-        </div>
-        `;
+            userCard.innerHTML = `
+                <h2>No favourites added ❤️</h2>
+            `;
+
+            return;
+        }
+
+        render(fav);
+
+    } else {
+
+        favBtn.innerHTML = "❤️ Show Favourites";
+
+        render(allUsers);
     }
 }
-
-let hasFetched = false;
 
 async function fetchUsers() {
+    if (isLoading) return;
+
     try {
-        userCard.innerHTML = "";
+        isLoading = true;
+        loadingSpinner(fetchBtn, true);
+
         errorText.innerHTML = "";
-        loadingText.innerHTML = "Loading..";
 
-        fetchBtn.disabled = true;
-        retry.disabled = true;
-        themeToggle.disabled = true;
+        const response = await fetch(`${API_URL}?results=12&page=${page}`);
 
-        const response = await fetch(API_URL);
+        if (!response.ok) {
+            throw new Error("Failed to fetch users");
+        }
+
         const data = await response.json();
+        
+        const uniqueUsers = data.results.filter(
+            newUser =>
+                !allUsers.some(
+                    oldUser => oldUser.email === newUser.email
+                )
+        );
+        
+        allUsers = [...allUsers, ...uniqueUsers];
 
-        allUsers = data.results;
-        display(allUsers);
+        render(allUsers);
 
-        hasFetched = true;
+        page++;
 
     } catch (error) {
         errorText.innerHTML = error.message;
     } finally {
-        loadingText.innerHTML = "";
-        themeToggle.disabled = false;
-        retry.disabled = (!hasFetched) ? true : false;
+        isLoading = false;
+        loadingSpinner(fetchBtn, false);
     }
 }
 
-fetchBtn.addEventListener("click", fetchUsers);
-retry.addEventListener("click", fetchUsers);
+loadMoreBtn.addEventListener("click", fetchUsers);
 
+window.addEventListener("scroll", async () => {
+    if (!isInfinite || isLoading || inFavMode) return;
 
-input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        showSkeleton();
+    const bottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
 
-        userCard.innerHTML = "";
-        errorText.innerHTML = "";
-        loadingText.innerHTML = "Loading..";
-        fetchBtn.disable = true;
-        retry.disabled = true;
-        themeToggle.disabled = true;
-
-        const searchUser = input.value.trim().toLowerCase();
-
-        const filteredUser = allUsers.filter(user => {
-            const fullName = `
-                ${user.name.first} ${user.name.last}
-            `.toLowerCase();
-            return fullName.includes(searchUser);
-        });
-
-        if (filteredUser.length === 0) {
-            errorText.innerHTML = "No user found";
-            loadingText.innerHTML = "";
-            return;
-        }
-
-        errorText.innerHTML = "";
-        loadingText.innerHTML = "";
-        input.value = "";
-
-        display(filteredUser);
-        themeToggle.disabled = false;
-        retry.disabled = !hasFetched ? true : false;
+    if (bottom) {
+        await fetchUsers();
     }
 });
 
-function display(users) {
-    userCard.innerHTML = users.map((user) => {
-        return `
+input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        const value = input.value.trim().toLowerCase();
+
+        const filteredUser = allUsers.filter(u => {
+            const fullName =
+                `${u.name.first} ${u.name.last}`.toLowerCase();
+
+            return fullName.includes(value);
+        });
+        render(filteredUser);
+    }
+});
+
+
+function render(list) {
+    userCard.innerHTML = list.map(user => `
         <div class="card">
-            <img src="${user.picture.large}" alt="User Image">
+            <img src="${user.picture.large}">
 
-            <h2>
-                ${user.name.first} ${user.name.last}
-            </h2>
+            <h2>${user.name.first} ${user.name.last}</h2>
 
             <p>
-                ${user.email} 
-                <button onclick="copyEmail('${user.email}')">
-                📌 Copy Email
-                </button>
+                ${user.email}
+                <button onclick="copyEmail('${user.email}')">📌 Copy</button>
             </p>
 
-            <p>
-                ${user.location.country}
-            </p>
-            <button onclick="addToFavourites('${user.email}')">
-                ❤️ Favourite
-            </button>
+            <p>${user.location.country}</p>
+
+            <button onclick="addToFav('${user.email}')">❤️ Fav</button>
         </div>
-        `;
-    }).join("");
+    `).join("");
 }
 
-const themeToggle = document.getElementById("theme-toggle");
+fetchBtn.addEventListener("click", fetchUsers);
 
-themeToggle.addEventListener("click", () => {
+favBtn.addEventListener("click", showFav);
+
+retryBtn.addEventListener("click", () => {
+    page = 1;
+    allUsers = [];
+    fetchUsers();
+});
+
+
+themeBtn.addEventListener("click", () => {
     document.body.classList.toggle("dark");
-})
+});
+
+
+const scrollStatus =
+    document.getElementById("scroll-status");
+
+scrollStatus.addEventListener("click", () => {
+
+    isInfinite = !isInfinite;
+
+    if (isInfinite) {
+
+        scrollStatus.innerHTML =
+            "♾️ Infinite Scroll: ON";
+
+        scrollStatus.classList.remove("scroll-off");
+        scrollStatus.classList.add("scroll-on");
+
+        loadMoreBtn.style.display = "none";
+
+    } else {
+
+        scrollStatus.innerHTML =
+            "⛔ Infinite Scroll: OFF";
+
+        scrollStatus.classList.remove("scroll-on");
+        scrollStatus.classList.add("scroll-off");
+
+        loadMoreBtn.style.display = "block";
+    }
+});
