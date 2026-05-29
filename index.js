@@ -104,6 +104,8 @@ async function fetchUsers() {
     try {
         isLoading = true;
         loadingSpinner(fetchBtn, true);
+        loadingSpinner(retryBtn, true);
+        loadingSpinner(loadMoreBtn, true);
 
         errorText.innerHTML = "";
 
