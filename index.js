@@ -48,7 +48,7 @@ async function copyEmail(email) {
 
         if (!copiedEmails.includes(email)) {
             copiedEmails.push(email);
-            alert("Email copied!");
+            showToast("Email copied!");
             saveCopy();
         }
 
@@ -82,7 +82,7 @@ function showFav() {
         if (fav.length === 0) {
 
             userCard.innerHTML = `
-                <h2>No favourites added ❤️</h2>
+                <h2>No favourites added </h2>
             `;
 
             return;
@@ -92,7 +92,7 @@ function showFav() {
 
     } else {
 
-        favBtn.innerHTML = "❤️ Show Favourites";
+        favBtn.innerHTML = " Show Favourites";
 
         render(allUsers);
     }
@@ -106,6 +106,8 @@ async function fetchUsers() {
         loadingSpinner(fetchBtn, true);
 
         errorText.innerHTML = "";
+
+        showSkeletons();
 
         const response = await fetch(`${API_URL}?results=12&page=${page}`);
 
@@ -123,6 +125,11 @@ async function fetchUsers() {
         );
         
         allUsers = [...allUsers, ...uniqueUsers];
+
+        if (inFavMode) {
+            inFavMode = false;
+            favBtn.innerHTML = " Show Favourites";
+        }   
 
         render(allUsers);
 
@@ -148,18 +155,23 @@ window.addEventListener("scroll", async () => {
     }
 });
 
-input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
+input.addEventListener("input", () => {
         const value = input.value.trim().toLowerCase();
 
-        const filteredUser = allUsers.filter(u => {
+        if (value === "") {
+            render(inFavMode ? fav : allUsers);
+            return;
+        }
+
+        const source = inFavMode ? fav : allUsers;
+
+        const filteredUser = source.filter(u => {
             const fullName =
                 `${u.name.first} ${u.name.last}`.toLowerCase();
 
             return fullName.includes(value);
         });
         render(filteredUser);
-    }
 });
 
 
@@ -172,12 +184,12 @@ function render(list) {
 
             <p>
                 ${user.email}
-                <button onclick="copyEmail('${user.email}')">📌 Copy</button>
+                <button onclick="copyEmail('${user.email}')"> Copy</button>
             </p>
 
             <p>${user.location.country}</p>
 
-            <button onclick="addToFav('${user.email}')">❤️ Fav</button>
+            <button onclick="addToFav('${user.email}')">Fav</button>
         </div>
     `).join("");
 }
@@ -208,7 +220,7 @@ scrollStatus.addEventListener("click", () => {
     if (isInfinite) {
 
         scrollStatus.innerHTML =
-            "♾️ Infinite Scroll: ON";
+            "Infinite Scroll: ON";
 
         scrollStatus.classList.remove("scroll-off");
         scrollStatus.classList.add("scroll-on");
@@ -218,7 +230,7 @@ scrollStatus.addEventListener("click", () => {
     } else {
 
         scrollStatus.innerHTML =
-            "⛔ Infinite Scroll: OFF";
+            "Infinite Scroll: OFF";
 
         scrollStatus.classList.remove("scroll-on");
         scrollStatus.classList.add("scroll-off");
@@ -226,3 +238,32 @@ scrollStatus.addEventListener("click", () => {
         loadMoreBtn.style.display = "block";
     }
 });
+
+function showToast(message) {
+    const toast = document.createElement("div");
+
+    toast.className = "toast";
+    toast.innerText = message;
+
+    document
+      .getElementById("toast-container")
+      .appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+function showSkeletons() {
+    userCard.innerHTML = "";
+
+    for (let i = 0; i < 12; i++) {
+        userCard.innerHTML += `
+            <div class="skeleton">
+                <div class="circle"></div>
+                <div class="line long"></div>
+                <div class="line short"></div>
+            </div>
+        `;
+    }
+}
